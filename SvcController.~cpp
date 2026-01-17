@@ -645,7 +645,7 @@ void __fastcall TGa1Agent::ServiceStop(TService *Sender, bool &Stopped)
 //---------------------------------------------------------------------------
 // 타이머 이벤트 (5초마다 실행)
 //---------------------------------------------------------------------------
-void __fastcall TGa1Agent::Timer1Timer(TObject *Sender)
+void __fastcall TGabbianiAgent::Timer1Timer(TObject *Sender)
 {
     Timer1->Enabled = false;
 

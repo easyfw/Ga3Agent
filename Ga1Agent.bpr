@@ -12,7 +12,7 @@
     <RESDEPEN value="$(RESFILES) SvcController.dfm"/>
     <LIBFILES value=""/>
     <LIBRARIES value=""/>
-    <SPARELIBS value="vcl.lib rtl.lib"/>
+    <SPARELIBS value="vcl.lib rtl.lib vacommb6.lib"/>
     <PACKAGES value="vcl.bpi rtl.bpi dbrtl.bpi adortl.bpi vcldb.bpi vclx.bpi bdertl.bpi 
       vcldbx.bpi ibxpress.bpi dsnap.bpi cds.bpi bdecds.bpi qrpt60.bpi teeui.bpi 
       teedb.bpi tee.bpi dss.bpi teeqr.bpi visualclx.bpi visualdbclx.bpi 
@@ -30,17 +30,17 @@
     <RELEASELIBPATH value="$(BCB)\lib\release"/>
     <LINKER value="ilink32"/>
     <USERDEFINES value="_DEBUG"/>
-    <SYSDEFINES value="_RTLDLL;NO_STRICT;USEPACKAGES"/>
+    <SYSDEFINES value="NO_STRICT;USEPACKAGES"/>
     <MAINSOURCE value="Ga1Agent.cpp"/>
-    <INCLUDEPATH value="C:\Borland\CBuilder6\Imports;C:\Borland\CBuilder6\Projects;E:\GA1Agent;$(BCB)\include;$(BCB)\include\vcl"/>
-    <LIBPATH value="C:\Borland\CBuilder6\Imports;C:\Borland\CBuilder6\Projects;E:\GA1Agent;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib"/>
+    <INCLUDEPATH value="$(BCB)\Lib\TMS_Async32;C:\Borland\CBuilder6\Imports;C:\Borland\CBuilder6\Projects;E:\GA1Agent;$(BCB)\include;$(BCB)\include\vcl"/>
+    <LIBPATH value="$(BCB)\Lib\TMS_Async32;C:\Borland\CBuilder6\Imports;C:\Borland\CBuilder6\Projects;E:\GA1Agent;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib"/>
     <WARNINGS value="-w-par"/>
     <OTHERFILES value=""/>
   </MACROS>
   <OPTIONS>
-    <IDLCFLAGS value="-IC:\Borland\CBuilder6\Imports -IC:\Borland\CBuilder6\Projects 
-      -IE:\GA1Agent -I$(BCB)\include -I$(BCB)\include\vcl -src_suffix cpp 
-      -D_DEBUG -boa"/>
+    <IDLCFLAGS value="-I$(BCB)\Lib\TMS_Async32 -IC:\Borland\CBuilder6\Imports 
+      -IC:\Borland\CBuilder6\Projects -IE:\GA1Agent -I$(BCB)\include 
+      -I$(BCB)\include\vcl -src_suffix cpp -D_DEBUG -boa"/>
     <CFLAG1 value="-Od -H=$(BCB)\lib\vcl60.csm -Hc -Vx -Ve -X- -r- -a8 -b- -k -y -v -vi- -c 
       -tW -tWM"/>
     <PFLAGS value="-$YD -$W -$O- -$A8 -v -JPHNE -M"/>
@@ -50,9 +50,9 @@
     <OTHERFILES value=""/>
   </OPTIONS>
   <LINKER>
-    <ALLOBJ value="c0w32.obj $(PACKAGES) Memmgr.Lib sysinit.obj $(OBJFILES)"/>
+    <ALLOBJ value="c0w32.obj $(PACKAGES) sysinit.obj $(OBJFILES)"/>
     <ALLRES value="$(RESFILES)"/>
-    <ALLLIB value="$(LIBFILES) $(LIBRARIES) import32.lib cp32mti.lib"/>
+    <ALLLIB value="$(LIBFILES) $(LIBRARIES) import32.lib cp32mt.lib"/>
     <OTHERFILES value=""/>
   </LINKER>
   <FILELIST>

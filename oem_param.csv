@@ -1,0 +1,6 @@
+ItemID,TagName,DataType,Description
+1,Random.Int1,INT,Test Integer 1
+2,Random.Int2,INT,Test Integer 2
+3,Random.Int4,INT,Test Integer 4
+4,Random.Real4,REAL,Test Real 4
+5,Random.Real8,REAL,Test Real 8

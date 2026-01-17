@@ -4,7 +4,7 @@
   <MACROS>
     <VERSION value="BCB.06.00"/>
     <PROJECT value="Ga1Agent.exe"/>
-    <OBJFILES value="Ga1Agent.obj SvcController.obj"/>
+    <OBJFILES value="Ga1Agent.obj SvcController.obj OPCAutomation_TLB.obj"/>
     <RESFILES value="Ga1Agent.res"/>
     <IDLFILES value=""/>
     <IDLGENFILES value=""/>
@@ -32,14 +32,15 @@
     <USERDEFINES value="_DEBUG"/>
     <SYSDEFINES value="_RTLDLL;NO_STRICT;USEPACKAGES"/>
     <MAINSOURCE value="Ga1Agent.cpp"/>
-    <INCLUDEPATH value="C:\Borland\CBuilder6\Projects;E:\GA1Agent;$(BCB)\include;$(BCB)\include\vcl"/>
-    <LIBPATH value="C:\Borland\CBuilder6\Projects;E:\GA1Agent;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib"/>
+    <INCLUDEPATH value="C:\Borland\CBuilder6\Imports;C:\Borland\CBuilder6\Projects;E:\GA1Agent;$(BCB)\include;$(BCB)\include\vcl"/>
+    <LIBPATH value="C:\Borland\CBuilder6\Imports;C:\Borland\CBuilder6\Projects;E:\GA1Agent;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib"/>
     <WARNINGS value="-w-par"/>
     <OTHERFILES value=""/>
   </MACROS>
   <OPTIONS>
-    <IDLCFLAGS value="-IC:\Borland\CBuilder6\Projects -IE:\GA1Agent -I$(BCB)\include 
-      -I$(BCB)\include\vcl -src_suffix cpp -D_DEBUG -boa"/>
+    <IDLCFLAGS value="-IC:\Borland\CBuilder6\Imports -IC:\Borland\CBuilder6\Projects 
+      -IE:\GA1Agent -I$(BCB)\include -I$(BCB)\include\vcl -src_suffix cpp 
+      -D_DEBUG -boa"/>
     <CFLAG1 value="-Od -H=$(BCB)\lib\vcl60.csm -Hc -Vx -Ve -X- -r- -a8 -b- -k -y -v -vi- -c 
       -tW -tWM"/>
     <PFLAGS value="-$YD -$W -$O- -$A8 -v -JPHNE -M"/>
@@ -58,6 +59,7 @@
       <FILE FILENAME="Ga1Agent.res" FORMNAME="" UNITNAME="Ga1Agent.res" CONTAINERID="ResTool" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="Ga1Agent.cpp" FORMNAME="" UNITNAME="Ga1Agent" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="SvcController.cpp" FORMNAME="Ga1Agent" UNITNAME="SvcController" CONTAINERID="CCompiler" DESIGNCLASS="TService" LOCALCOMMAND=""/>
+      <FILE FILENAME="OPCAutomation_TLB.cpp" FORMNAME="" UNITNAME="OPCAutomation_TLB" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
   </FILELIST>
   <BUILDTOOLS>
   </BUILDTOOLS>
