@@ -39,3 +39,39 @@
 
 # debug information files
 *.dwo
+
+# Build directories
+build/
+bin/
+obj/
+Debug/
+Release/
+x64/
+Win32/
+.vs/
+
+# Visual Studio files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.vcxproj.filters
+*.vcxproj.user
+
+# CMake files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.log
+*.bak
