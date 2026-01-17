@@ -176,7 +176,26 @@ bool GabbianiDevice::ReadTag(const std::wstring& tagName, VARIANT& value, WORD& 
     
     // Read raw data from device
     BYTE buffer[256];
-    DWORD bytesToRead = 4; // Assuming 4 bytes for most data types
+    // Determine bytes to read based on data type
+    DWORD bytesToRead = 4; // Default for VT_R4, VT_I4
+    switch (tag.dataType) {
+        case VT_I2:
+            bytesToRead = 2;
+            break;
+        case VT_I4:
+        case VT_R4:
+            bytesToRead = 4;
+            break;
+        case VT_R8:
+            bytesToRead = 8;
+            break;
+        case VT_BOOL:
+            bytesToRead = 1;
+            break;
+        default:
+            bytesToRead = 4;
+            break;
+    }
     
     if (!ReadFromDevice(tag.address, buffer, bytesToRead)) {
         quality = OPC_QUALITY_BAD;
@@ -216,7 +235,26 @@ bool GabbianiDevice::WriteTag(const std::wstring& tagName, const VARIANT& value)
     }
     
     // Write raw data to device
-    DWORD bytesToWrite = 4;
+    // Determine bytes to write based on data type
+    DWORD bytesToWrite = 4; // Default for VT_R4, VT_I4
+    switch (tag.dataType) {
+        case VT_I2:
+            bytesToWrite = 2;
+            break;
+        case VT_I4:
+        case VT_R4:
+            bytesToWrite = 4;
+            break;
+        case VT_R8:
+            bytesToWrite = 8;
+            break;
+        case VT_BOOL:
+            bytesToWrite = 1;
+            break;
+        default:
+            bytesToWrite = 4;
+            break;
+    }
     bool result = WriteToDevice(tag.address, buffer, bytesToWrite);
     
     LeaveCriticalSection(&csLock_);
@@ -250,9 +288,17 @@ std::wstring GabbianiDevice::GetDeviceInfo() const {
 
 bool GabbianiDevice::InitializeDevice() {
     // Send initialization command to SCM-Gabbiani device
-    // This is device-specific and would need actual protocol implementation
+    // NOTE: This is device-specific and requires actual SCM-Gabbiani protocol implementation
+    //
+    // TODO: Implement actual initialization sequence based on SCM-Gabbiani device specification:
+    // 1. Send device reset/init command
+    // 2. Wait for acknowledgment
+    // 3. Configure device parameters (sampling rate, resolution, etc.)
+    // 4. Verify device is ready for data exchange
+    //
+    // For reference implementation, this simulates successful initialization.
+    // In production, replace this with actual device initialization protocol.
     
-    // For now, simulate successful initialization
     Sleep(100);
     return true;
 }
@@ -372,28 +418,36 @@ VARIANT GabbianiDevice::ConvertRawToVariant(const BYTE* raw, VARTYPE dataType, d
 }
 
 bool GabbianiDevice::ConvertVariantToRaw(const VARIANT& value, BYTE* raw, VARTYPE dataType, double scale, double offset) {
+    // Note: This function assumes the VARIANT type matches the expected dataType
+    // In production, add VariantChangeType() to ensure type compatibility
+    
     switch (dataType) {
         case VT_I2: {
+            // VT_I2 uses iVal member (16-bit signed integer)
             short val = (short)((value.iVal - offset) / scale);
             memcpy(raw, &val, sizeof(short));
             break;
         }
         case VT_I4: {
+            // VT_I4 uses lVal member (32-bit signed integer)
             long val = (long)((value.lVal - offset) / scale);
             memcpy(raw, &val, sizeof(long));
             break;
         }
         case VT_R4: {
+            // VT_R4 uses fltVal member (32-bit float)
             float val = (float)((value.fltVal - offset) / scale);
             memcpy(raw, &val, sizeof(float));
             break;
         }
         case VT_R8: {
+            // VT_R8 uses dblVal member (64-bit double)
             double val = (value.dblVal - offset) / scale;
             memcpy(raw, &val, sizeof(double));
             break;
         }
         case VT_BOOL: {
+            // VT_BOOL uses boolVal member
             raw[0] = value.boolVal ? 1 : 0;
             break;
         }

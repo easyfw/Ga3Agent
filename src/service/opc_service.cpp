@@ -300,8 +300,9 @@ bool Ga1AgentService::RunConsole() {
     }
     
     // Main loop - read values periodically
+    const int CONSOLE_TEST_DURATION = 60; // Duration in seconds for console mode
     int loopCount = 0;
-    while (loopCount < 60) { // Run for 60 seconds in console mode
+    while (loopCount < CONSOLE_TEST_DURATION) {
         Sleep(2000);
         
         std::vector<OPCDA::OPCItemValue> values;
