@@ -553,7 +553,6 @@ void __fastcall TGa1Agent::SendToESP32(int changeCount, bool isHeartbeat)
     {
         // 패킷 생성
         int packetLen = BuildPacket(m_SendBuffer);
-		LogMessage("DEBUG: packetLen=" + IntToStr(packetLen));  // DEBUG
 
         // 수신 버퍼 비우기
         while (MyComm->ReadBufUsed() > 0)

@@ -264,6 +264,7 @@ long __fastcall TGa1Agent::VariantToLong(const VARIANT &v)
         case VT_R4:   return (long)(v.fltVal * 1000);
         case VT_R8:   return (long)(v.dblVal * 1000);
         case VT_BOOL: return v.boolVal ? 1 : 0;
+		case VT_DATE: return (long)((v.date - 25569.0) * 86400.0); // OLE DATE (1899-12-30 기준) → Unix timestamp (1970-01-01 기준)
         default:      return 0;
     }
 }
