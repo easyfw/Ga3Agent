@@ -29,6 +29,15 @@ typedef OPCItemPtr        _di_IOPCItem;
 #define PROTO_ETX       0x03
 #define MAX_OPC_ITEMS   500
 
+// 응답 코드
+#define RESP_CMD_ACK    0x01
+#define RESP_CMD_NAK    0x02
+#define RESP_STATUS_OK  0x00
+#define RESP_STATUS_CHK 0x01
+#define RESP_STATUS_LEN 0x02
+#define RESP_STATUS_TMO 0x03
+#define RESP_TIMEOUT_MS 5000
+
 // OPC 아이템 정보 구조체
 struct TOPCItemInfo
 {
@@ -60,7 +69,7 @@ private:        // User declarations
     _di_IOPCGroups     OPCGroups;
     _di_IOPCGroup      MyGroup;
     _di_IOPCItems      MyItems;
-    
+
     // 아이템 배열
     TOPCItemInfo    m_Items[MAX_OPC_ITEMS];
     int             m_ItemCount;
@@ -70,7 +79,13 @@ private:        // User declarations
     BYTE            m_SendBuffer[1024];
     bool            m_bFirstSend;
 
-    // 로그
+	// 응답 관련
+	int             m_nRetryCount;
+	int             m_nMaxRetries;
+	bool            m_bWaitingResponse;
+    DWORD           m_dwLastSendTick;       // 마지막 전송 시간
+	DWORD           m_dwHeartbeatInterval;  // Heartbeat 주기 (ms)
+
     // 로그
     TCHAR gbuf[65535];
 
@@ -87,12 +102,15 @@ private:        // User declarations
     void __fastcall CloseSerialPort();
     BYTE __fastcall CalcChecksum(BYTE* data, int len);
     int __fastcall BuildPacket(BYTE* buffer);
-    void __fastcall SendToESP32();
-    
+    void __fastcall SendToESP32(int changeCount = 0, bool isHeartbeat = false);
+
     // 내부 함수 - 값 비교
     bool __fastcall IsValueChanged(int index);
     bool __fastcall HasAnyChanges();
     long __fastcall VariantToLong(const VARIANT &v);
+
+	bool __fastcall WaitForResponse(int timeoutMs);
+	void __fastcall HandleSendFailure();
 
 public:         // User declarations
 	__fastcall TGa1Agent(TComponent* Owner);

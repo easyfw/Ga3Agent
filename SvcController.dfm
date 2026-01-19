@@ -2,7 +2,7 @@ object Ga1Agent: TGa1Agent
   OldCreateOrder = False
   DisplayName = 'Gabbiani OPC Agent'
   Left = 360
-  Top = 225
+  Top = 226
   Height = 150
   Width = 215
   object Timer1: TTimer
