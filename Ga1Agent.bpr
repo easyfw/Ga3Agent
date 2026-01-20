@@ -11,7 +11,7 @@
     <DEFFILE value=""/>
     <RESDEPEN value="$(RESFILES) SvcController.dfm"/>
     <LIBFILES value=""/>
-    <LIBRARIES value=""/>
+    <LIBRARIES value="vacommb6.lib rtl.lib vcl.lib"/>
     <SPARELIBS value="vcl.lib rtl.lib vacommb6.lib"/>
     <PACKAGES value="vcl.bpi rtl.bpi dbrtl.bpi adortl.bpi vcldb.bpi vclx.bpi bdertl.bpi 
       vcldbx.bpi ibxpress.bpi dsnap.bpi cds.bpi bdecds.bpi qrpt60.bpi teeui.bpi 
@@ -30,7 +30,7 @@
     <RELEASELIBPATH value="$(BCB)\lib\release"/>
     <LINKER value="ilink32"/>
     <USERDEFINES value="_DEBUG"/>
-    <SYSDEFINES value="NO_STRICT;USEPACKAGES"/>
+    <SYSDEFINES value="NO_STRICT"/>
     <MAINSOURCE value="Ga1Agent.cpp"/>
     <INCLUDEPATH value="$(BCB)\Lib\TMS_Async32;C:\Borland\CBuilder6\Imports;C:\Borland\CBuilder6\Projects;E:\GA1Agent;$(BCB)\include;$(BCB)\include\vcl"/>
     <LIBPATH value="$(BCB)\Lib\TMS_Async32;C:\Borland\CBuilder6\Imports;C:\Borland\CBuilder6\Projects;E:\GA1Agent;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib"/>
@@ -50,7 +50,7 @@
     <OTHERFILES value=""/>
   </OPTIONS>
   <LINKER>
-    <ALLOBJ value="c0w32.obj $(PACKAGES) sysinit.obj $(OBJFILES)"/>
+    <ALLOBJ value="c0w32.obj sysinit.obj $(OBJFILES)"/>
     <ALLRES value="$(RESFILES)"/>
     <ALLLIB value="$(LIBFILES) $(LIBRARIES) import32.lib cp32mt.lib"/>
     <OTHERFILES value=""/>

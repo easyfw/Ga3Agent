@@ -109,7 +109,7 @@ __fastcall TGa1Agent::TGa1Agent(TComponent* Owner)
     
     // === Heartbeat 관련 초기화 추가 ===
     m_dwLastSendTick = 0;
-    m_dwHeartbeatInterval = 60000;  // 60초 (필요시 조정)
+    m_dwHeartbeatInterval = 5000;  // 5초 (필요시 조정)
  
 }
 
