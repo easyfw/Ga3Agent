@@ -92,6 +92,22 @@ ProductName=
 ProductVersion=1.0.0.0
 Comments=
 
+[HistoryLists\hlIncludePath]
+Count=1
+Item0=$(BCB)\Lib\TMS_Async32;C:\Borland\CBuilder6\Imports;C:\Borland\CBuilder6\Projects;E:\GA1Agent;$(BCB)\include;$(BCB)\include\vcl
+
+[HistoryLists\hlLibraryPath]
+Count=1
+Item0=$(BCB)\Lib\TMS_Async32;C:\Borland\CBuilder6\Imports;C:\Borland\CBuilder6\Projects;E:\GA1Agent;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib
+
+[HistoryLists\hlDebugSourcePath]
+Count=1
+Item0=$(BCB)\source\vcl
+
+[HistoryLists\hlConditionals]
+Count=1
+Item0=_DEBUG
+
 [Debugging]
 DebugSourceDirs=$(BCB)\source\vcl
 
