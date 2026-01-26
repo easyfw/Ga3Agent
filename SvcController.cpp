@@ -702,8 +702,11 @@ void __fastcall TGa1Agent::ServiceStart(TService *Sender, bool &Started)
 
         // 3. OPC 서버 연결
         OPCServer = CoOPCServer::Create();
+#if		SERVER_SIMULATE
         OPCServer->Connect(WideString("Matrikon.OPC.Simulation.1"), TNoParam());
-//        OPCServer->Connect(WideString("Schneider-Aut.OFS.2"), TNoParam());
+#else
+        OPCServer->Connect(WideString("Schneider-Aut.OFS.2"), TNoParam());
+#endif
         LogMessage("OPC OK");
 
         // 4. 그룹 설정

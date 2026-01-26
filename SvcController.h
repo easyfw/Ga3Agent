@@ -38,6 +38,8 @@ typedef OPCItemPtr        _di_IOPCItem;
 #define RESP_STATUS_TMO 0x03
 #define RESP_TIMEOUT_MS 5000
 
+#define	SERVER_SIMULATE	0		// 시뮬레이션 모드
+
 // OPC 아이템 정보 구조체
 struct TOPCItemInfo
 {
