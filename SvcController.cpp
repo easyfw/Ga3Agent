@@ -12,25 +12,6 @@
 
 
 //=============================================================================
-// SvcController.cpp - 서비스 시작/종료 로그 간소화
-//=============================================================================
-
-// ServiceStart 함수 내 로그 변경 예시:
-// 기존: LogMessage("=== Service Starting ===");
-// 변경: LogMessage("SVC START");
-
-// 기존: LogMessage("Step 1: Opening Serial Port...");
-// 변경: LogMessage("COM" + IntToStr(portNum) + " opening...");
-
-// 기존: LogMessage("Success: OPC Server Connected.");
-// 변경: LogMessage("OPC OK");
-
-// ServiceStop 함수 내 로그 변경 예시:
-// 기존: LogMessage("=== Service Stopping ===");
-// 변경: LogMessage("SVC STOP");
-
-
-//=============================================================================
 // 로그 출력 비교
 //=============================================================================
 /*
@@ -58,31 +39,6 @@ OK          - 전송 성공 (ACK 수신)
 FAIL        - 전송 실패 (NAK 또는 타임아웃)
 E:메시지    - 에러
 */
-
-
-//=============================================================================
-// 디버그 모드 옵션 (필요시)
-//=============================================================================
-/*
-상세 로그가 필요한 경우를 위해 디버그 모드 추가 가능:
-
-// SvcController.h에 추가
-bool m_bDebugMode;
-
-// 생성자에서 초기화
-m_bDebugMode = false;  // 또는 설정 파일에서 읽기
-
-// 로그 출력 시
-if (m_bDebugMode)
-{
-    // 상세 로그 (HEX 덤프 등)
-    String hexDump = "TX: ";
-    for (int i = 0; i < packetLen; i++)
-        hexDump += IntToHex(m_SendBuffer[i], 2) + " ";
-    LogMessage(hexDump);
-}
-*/
-
 
 TGa1Agent *Ga1Agent;
 
@@ -291,7 +247,7 @@ void __fastcall TGa1Agent::LoadSettings()
         else m_nComPort = StrToIntDef(comStr, 17);
 
         m_nBaudRate = ini->ReadInteger("Communication", "BaudRate", 115200);
-        
+
         // [Agent] 섹션
         m_nTimeInterval = ini->ReadInteger("Agent", "TimeInterval", 5000);
         LogMessage("CFG: COM" + IntToStr(m_nComPort) + " " + IntToStr(m_nBaudRate) + " T:" + IntToStr(m_nTimeInterval));
@@ -594,7 +550,14 @@ void __fastcall TGa1Agent::SendToESP32(int changeCount, bool isHeartbeat)
             BYTE dummy;
             MyComm->ReadBuf(&dummy, 1);
         }
-
+    
+		// 로그 출력 시
+#if	HK_DEBUG
+	    // 상세 로그 (HEX 덤프 등)
+    	String hexDump = "TX: ";
+	    for (int i = 0; i < packetLen; i++) hexDump += IntToHex(m_SendBuffer[i], 2) + " ";
+	    LogMessage(hexDump);
+#endif
         // 전송
         MyComm->WriteBuf(m_SendBuffer, packetLen);
 
@@ -659,14 +622,15 @@ void __fastcall TGa1Agent::ServiceStart(TService *Sender, bool &Started)
 {
     if (Timer1) Timer1->Enabled = false;
 
-    CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    // STA 모드로 COM 초기화 (OPC Automation은 STA 필요)
+    CoInitialize(NULL);
 
     LogMessage("SVC START");
     Started = true;
 
     try
     {
-        // 0. INI 설정 로드 (최우선) ===
+        // 0. INI 설정 로드
         LoadSettings();
 
         // 1. CSV 설정 파일 로드
@@ -702,7 +666,7 @@ void __fastcall TGa1Agent::ServiceStart(TService *Sender, bool &Started)
 
         // 3. OPC 서버 연결
         OPCServer = CoOPCServer::Create();
-#if		SERVER_SIMULATE
+#if SERVER_SIMULATE
         OPCServer->Connect(WideString("Matrikon.OPC.Simulation.1"), TNoParam());
 #else
         OPCServer->Connect(WideString("Schneider-Aut.OFS.2"), TNoParam());
@@ -722,6 +686,7 @@ void __fastcall TGa1Agent::ServiceStart(TService *Sender, bool &Started)
         MyGroup->IsSubscribed = true;
         MyGroup->set_IsActive(VARIANT_TRUE);
         MyGroup->set_IsSubscribed(VARIANT_TRUE);
+        MyGroup->set_UpdateRate(1000);
 
         MyItems = MyGroup->OPCItems;
 
@@ -735,19 +700,74 @@ void __fastcall TGa1Agent::ServiceStart(TService *Sender, bool &Started)
                 MyItems->AddItem(WideString(m_Items[i].TagName),
                                  m_Items[i].ItemID, &tempItem);
                 m_Items[i].pItem = tempItem;
+
+                if (tempItem != NULL)
+                {
+                    long serverHandle = tempItem->get_ServerHandle();
+                    long clientHandle = tempItem->get_ClientHandle();
+                    LogMessage("  [" + IntToStr(i) + "] SH=" + IntToStr(serverHandle) +
+                               " CH=" + IntToStr(clientHandle));
+                }
                 regCount++;
             }
             catch (Exception &e)
             {
+                LogMessage("  [" + IntToStr(i) + "] AddItem FAIL: " + e.Message);
                 m_Items[i].pItem = NULL;
             }
         }
         LogMessage("ITEM:" + IntToStr(regCount) + "/" + IntToStr(m_ItemCount));
 
+        // 6. 초기 데이터 읽기 대기 (OPC 서버가 데이터 준비할 시간)
+        Sleep(2000);
+
+        // 7. 초기 값 읽기 테스트 (같은 스레드에서)
+        for (int i = 0; i < m_ItemCount; i++)
+        {
+            if (m_Items[i].pItem != NULL)
+            {
+                OPCItem* pItem = (OPCItem*)m_Items[i].pItem;
+                
+                VARIANT varValue, varQuality, varTimestamp;
+                VariantInit(&varValue);
+                VariantInit(&varQuality);
+                VariantInit(&varTimestamp);
+                
+                try
+                {
+                    HRESULT hr = pItem->Read(2, &varValue, &varQuality, &varTimestamp);
+                    LogMessage("INIT RD[" + IntToStr(i) + "] hr=" + IntToHex((int)hr, 8) +
+                               " vt=" + IntToStr(varValue.vt) +
+                               " V=" + VariantToString(varValue));
+
+                    if (SUCCEEDED(hr))
+                    {
+                        VariantCopy(&m_Items[i].varValue, &varValue);
+                        VariantCopy(&m_Items[i].varPrevValue, &varValue);
+                        
+                        if (varQuality.vt == VT_I2)
+                            m_Items[i].Quality = varQuality.iVal;
+                        else if (varQuality.vt == VT_I4)
+                            m_Items[i].Quality = varQuality.lVal;
+                        else
+                            m_Items[i].Quality = 192;
+                    }
+                }
+                catch (Exception &e)
+                {
+                    LogMessage("INIT RD ERR[" + IntToStr(i) + "]: " + e.Message);
+                }
+                
+                VariantClear(&varValue);
+                VariantClear(&varQuality);
+                VariantClear(&varTimestamp);
+            }
+        }
+
         m_bFirstSend = true;
         m_dwLastSendTick = 0;
 
-        // 6. 타이머 시작
+        // 8. 타이머 시작
         if (Timer1)
         {
             Timer1->Interval = m_nTimeInterval;
@@ -761,6 +781,7 @@ void __fastcall TGa1Agent::ServiceStart(TService *Sender, bool &Started)
         LogMessage("E:" + ex.Message);
     }
 }
+
 
 //---------------------------------------------------------------------------
 // 서비스 종료
@@ -800,6 +821,12 @@ void __fastcall TGa1Agent::ServiceStop(TService *Sender, bool &Stopped)
 ///---------------------------------------------------------------------------
 // 타이머 이벤트 (전체 교체 - Heartbeat + 컴팩트 로그 + COM 재연결)
 //---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// 타이머 이벤트 - SyncRead 사용 버전
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+// 타이머 이벤트 - OPCItem.Read() 사용 버전
+//---------------------------------------------------------------------------
 void __fastcall TGa1Agent::Timer1Timer(TObject *Sender)
 {
     Timer1->Enabled = false;
@@ -807,18 +834,56 @@ void __fastcall TGa1Agent::Timer1Timer(TObject *Sender)
     try
     {
         //------------------------------------------------------------------
-        // 1. OPC 데이터 읽기 (COM 포트 상태와 무관하게 항상 실행)
+        // 1. OPC 데이터 읽기
         //------------------------------------------------------------------
-        if ((IUnknown*)OPCServer != NULL)
+        if ((IUnknown*)OPCServer != NULL && m_ItemCount > 0)
         {
-            // 모든 아이템 값 읽기
             for (int i = 0; i < m_ItemCount; i++)
             {
                 if (m_Items[i].pItem != NULL)
                 {
                     OPCItem* pItem = (OPCItem*)m_Items[i].pItem;
-                    pItem->get_Value(&m_Items[i].varValue);
-                    pItem->get_Quality(&m_Items[i].Quality);
+                    
+                    try
+                    {
+                        // 방법 1: Read() 사용
+                        VARIANT varValue, varQuality, varTimestamp;
+                        VariantInit(&varValue);
+                        VariantInit(&varQuality);
+                        VariantInit(&varTimestamp);
+                        
+                        HRESULT hr = pItem->Read(2, &varValue, &varQuality, &varTimestamp);
+                        
+                        if (SUCCEEDED(hr))
+                        {
+                            VariantCopy(&m_Items[i].varValue, &varValue);
+                            
+                            if (varQuality.vt == VT_I2) m_Items[i].Quality = varQuality.iVal;
+                            else if (varQuality.vt == VT_I4) m_Items[i].Quality = varQuality.lVal;
+                            else m_Items[i].Quality = 192;
+
+                            // 디버그 로그 (필요시 주석 해제)
+                            // LogMessage("RD[" + IntToStr(i) + "] V=" + VariantToString(varValue));
+                        }
+                        else
+                        {
+                            // Read 실패 시 get_Value 시도
+                            pItem->get_Value(&m_Items[i].varValue);
+                            pItem->get_Quality(&m_Items[i].Quality);
+
+                            // 디버그 로그
+                            // LogMessage("GV[" + IntToStr(i) + "] vt=" + IntToStr(m_Items[i].varValue.vt));
+                        }
+                        
+                        VariantClear(&varValue);
+                        VariantClear(&varQuality);
+                        VariantClear(&varTimestamp);
+                    }
+                    catch (Exception &e)
+                    {
+                        LogMessage("RD ERR[" + IntToStr(i) + "]: " + e.Message);
+                        m_Items[i].Quality = 0;
+                    }
                 }
             }
 
@@ -865,7 +930,6 @@ void __fastcall TGa1Agent::Timer1Timer(TObject *Sender)
             {
                 bool isHB = heartbeatTimeout && !hasChanges && !m_bFirstSend;
                 
-                // SendToESP32에서 COM 포트 체크 & 재초기화 수행
                 SendToESP32(changeCount, isHB);
                 m_dwLastSendTick = GetTickCount();
 
@@ -880,6 +944,7 @@ void __fastcall TGa1Agent::Timer1Timer(TObject *Sender)
 
     Timer1->Enabled = true;
 }
+
 //---------------------------------------------------------------------------
 // WaitForResponse 함수 (로그 제거)
 //---------------------------------------------------------------------------
@@ -891,9 +956,9 @@ bool __fastcall TGa1Agent::WaitForResponse(int timeoutMs)
     BYTE respBuffer[5];
     int respIndex = 0;
     DWORD startTick = GetTickCount();
-    
+
     m_bWaitingResponse = true;
-    
+
     while (GetTickCount() - startTick < (DWORD)timeoutMs)
     {
         if (MyComm->ReadBufUsed() > 0)
