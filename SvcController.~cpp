@@ -739,7 +739,7 @@ void __fastcall TGa1Agent::ServiceStart(TService *Sender, bool &Started)
                     LogMessage("INIT RD[" + IntToStr(i) + "] hr=" + IntToHex((int)hr, 8) +
                                " vt=" + IntToStr(varValue.vt) +
                                " V=" + VariantToString(varValue));
-                    
+
                     if (SUCCEEDED(hr))
                     {
                         VariantCopy(&m_Items[i].varValue, &varValue);
@@ -858,13 +858,10 @@ void __fastcall TGa1Agent::Timer1Timer(TObject *Sender)
                         {
                             VariantCopy(&m_Items[i].varValue, &varValue);
                             
-                            if (varQuality.vt == VT_I2)
-                                m_Items[i].Quality = varQuality.iVal;
-                            else if (varQuality.vt == VT_I4)
-                                m_Items[i].Quality = varQuality.lVal;
-                            else
-                                m_Items[i].Quality = 192;
-                            
+                            if (varQuality.vt == VT_I2) m_Items[i].Quality = varQuality.iVal;
+                            else if (varQuality.vt == VT_I4) m_Items[i].Quality = varQuality.lVal;
+                            else m_Items[i].Quality = 192;
+
                             // 디버그 로그 (필요시 주석 해제)
                             // LogMessage("RD[" + IntToStr(i) + "] V=" + VariantToString(varValue));
                         }
@@ -873,7 +870,7 @@ void __fastcall TGa1Agent::Timer1Timer(TObject *Sender)
                             // Read 실패 시 get_Value 시도
                             pItem->get_Value(&m_Items[i].varValue);
                             pItem->get_Quality(&m_Items[i].Quality);
-                            
+
                             // 디버그 로그
                             // LogMessage("GV[" + IntToStr(i) + "] vt=" + IntToStr(m_Items[i].varValue.vt));
                         }
@@ -947,145 +944,6 @@ void __fastcall TGa1Agent::Timer1Timer(TObject *Sender)
 
     Timer1->Enabled = true;
 }
-
-/*
-void __fastcall TGa1Agent::Timer1Timer(TObject *Sender)
-{
-    Timer1->Enabled = false;
-
-    try
-    {
-        //------------------------------------------------------------------
-        // 1. OPC 데이터 읽기 (SyncRead 사용)
-        //------------------------------------------------------------------
-        if ((IUnknown*)OPCServer != NULL && m_ItemCount > 0)
-        {
-            long numItems = m_ItemCount;
-            
-            // ServerHandles 배열 생성
-            SAFEARRAY *pServerHandles = SafeArrayCreateVector(VT_I4, 1, numItems);
-            
-            for (long i = 0; i < numItems; i++)
-            {
-                long idx = i + 1;  // SAFEARRAY는 1부터 시작
-                OPCItem* pItem = (OPCItem*)m_Items[i].pItem;
-                if (pItem != NULL)
-                {
-                    long sh = pItem->get_ServerHandle();
-                    SafeArrayPutElement(pServerHandles, &idx, &sh);
-                }
-            }
-
-            // 출력 배열
-            SAFEARRAY *pValues = NULL;
-            SAFEARRAY *pErrors = NULL;
-
-			try
-			{
-		    	// SyncRead 호출 (1 = OPCDevice)
-			    MyGroup->SyncRead(1, numItems, &pServerHandles, &pValues, &pErrors);
-
-			    LogMessage("SyncRead done, pValues=" + IntToStr((int)pValues));
-
-			    // 결과 처리
-			    if (pValues != NULL)
-			    {
-			        long lBound, uBound;
-			        HRESULT hr1 = SafeArrayGetLBound(pValues, 1, &lBound);
-			        HRESULT hr2 = SafeArrayGetUBound(pValues, 1, &uBound);
-			        LogMessage("Bounds: " + IntToStr(lBound) + "-" + IntToStr(uBound) +
-			                   " hr=" + IntToHex((int)hr1, 8) + "," + IntToHex((int)hr2, 8));
-
-			        VARIANT *pVals;
-			        HRESULT hr3 = SafeArrayAccessData(pValues, (void**)&pVals);
-			        LogMessage("AccessData hr=" + IntToHex((int)hr3, 8));
-
-			        if (SUCCEEDED(hr3))
-			        {
-			            for (int i = 0; i < numItems && i <= (uBound - lBound); i++)
-			            {
-			                VariantCopy(&m_Items[i].varValue, &pVals[i]);
-			                m_Items[i].Quality = 192;
-
-			                LogMessage("DBG[" + IntToStr(i) + "] vt=" +
-			                           IntToStr(m_Items[i].varValue.vt) +
-			                           " V=" + VariantToString(m_Items[i].varValue));
-			            }
-			            SafeArrayUnaccessData(pValues);
-			        }
-			        SafeArrayDestroy(pValues);
-			    }
-			    else
-			    {
-			        LogMessage("pValues is NULL!");
-			    }
-			}
-			catch (Exception &e)
-			{
-			    LogMessage("SyncRead ERR: " + e.Message);
-			}
-
-            // ServerHandles 해제
-            SafeArrayDestroy(pServerHandles);
-
-            //------------------------------------------------------------------
-            // 2. 변경 여부 확인 및 변경 개수 카운트
-            //------------------------------------------------------------------
-            int changeCount = 0;
-            for (int i = 0; i < m_ItemCount; i++)
-            {
-                if (IsValueChanged(i))
-                {
-                    m_Items[i].Changed = true;
-                    changeCount++;
-                }
-            }
-            bool hasChanges = (changeCount > 0);
-            
-            //------------------------------------------------------------------
-            // 3. Heartbeat 타임아웃 확인
-            //------------------------------------------------------------------
-            DWORD dwNow = GetTickCount();
-            bool heartbeatTimeout = false;
-            
-            if (m_dwLastSendTick == 0)
-            {
-                heartbeatTimeout = true;
-            }
-            else
-            {
-                DWORD elapsed;
-                if (dwNow >= m_dwLastSendTick)
-                    elapsed = dwNow - m_dwLastSendTick;
-                else
-                    elapsed = (0xFFFFFFFF - m_dwLastSendTick) + dwNow + 1;
-                
-                if (elapsed >= m_dwHeartbeatInterval)
-                    heartbeatTimeout = true;
-            }
-
-            //------------------------------------------------------------------
-            // 4. 전송 조건: 최초 OR 변경 OR Heartbeat
-            //------------------------------------------------------------------
-            if (m_bFirstSend || hasChanges || heartbeatTimeout)
-            {
-                bool isHB = heartbeatTimeout && !hasChanges && !m_bFirstSend;
-                
-                SendToESP32(changeCount, isHB);
-                m_dwLastSendTick = GetTickCount();
-
-                m_bFirstSend = false;
-            }
-        }
-    }
-    catch (Exception &e)
-    {
-        LogMessage("E:" + e.Message);
-    }
-
-    Timer1->Enabled = true;
-}
-*/
 
 //---------------------------------------------------------------------------
 // WaitForResponse 함수 (로그 제거)

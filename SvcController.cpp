@@ -564,11 +564,9 @@ void __fastcall TGa1Agent::SendToESP32(int changeCount, bool isHeartbeat)
         // 컴팩트 로그 생성
         // 형식: D:5 TX:43 OK / D(HB):5 TX:43 OK / D:5(C:2) TX:43 FAIL
         String logMsg = "D";
-        if (isHeartbeat)
-            logMsg += "(HB)";
+        if (isHeartbeat) logMsg += "(HB)";
         logMsg += ":" + IntToStr(m_ItemCount);
-        if (changeCount > 0)
-            logMsg += "(C:" + IntToStr(changeCount) + ")";
+        if (changeCount > 0) logMsg += "(C:" + IntToStr(changeCount) + ")";
         logMsg += " TX:" + IntToStr(packetLen);
 
         // 응답 대기
@@ -705,8 +703,7 @@ void __fastcall TGa1Agent::ServiceStart(TService *Sender, bool &Started)
                 {
                     long serverHandle = tempItem->get_ServerHandle();
                     long clientHandle = tempItem->get_ClientHandle();
-                    LogMessage("  [" + IntToStr(i) + "] SH=" + IntToStr(serverHandle) +
-                               " CH=" + IntToStr(clientHandle));
+                    LogMessage("  [" + IntToStr(i) + "] SH=" + IntToStr(serverHandle) + " CH=" + IntToStr(clientHandle));
                 }
                 regCount++;
             }

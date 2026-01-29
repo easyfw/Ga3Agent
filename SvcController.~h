@@ -38,7 +38,7 @@ typedef OPCItemPtr        _di_IOPCItem;
 #define RESP_STATUS_TMO 0x03
 #define RESP_TIMEOUT_MS 5000
 
-#define HK_DEBUG		1
+#define HK_DEBUG		0		// debug enable
 #define	SERVER_SIMULATE	0		// 시뮬레이션 모드
 
 // OPC 아이템 정보 구조체
