@@ -1,0 +1,63 @@
+# Makefile for Ga1Agent (Windows with MinGW or MSVC nmake)
+# Usage: nmake /f Makefile.win
+
+# Compiler and tools
+CC = cl.exe
+LINK = link.exe
+
+# Directories
+SRC_DIR = src
+INC_DIR = include
+OBJ_DIR = obj
+BIN_DIR = bin
+
+# Compiler flags
+CFLAGS = /nologo /W3 /EHsc /D_UNICODE /DUNICODE /D_WIN32_WINNT=0x0601 /I$(INC_DIR)
+LDFLAGS = /nologo /SUBSYSTEM:CONSOLE ole32.lib oleaut32.lib advapi32.lib
+
+# Target
+TARGET = $(BIN_DIR)\Ga1Agent.exe
+
+# Source files
+SOURCES = \
+    $(SRC_DIR)\main.cpp \
+    $(SRC_DIR)\server\opc_server.cpp \
+    $(SRC_DIR)\device\gabbiani_device.cpp \
+    $(SRC_DIR)\service\opc_service.cpp
+
+# Object files
+OBJECTS = \
+    $(OBJ_DIR)\main.obj \
+    $(OBJ_DIR)\opc_server.obj \
+    $(OBJ_DIR)\gabbiani_device.obj \
+    $(OBJ_DIR)\opc_service.obj
+
+# Build rules
+all: dirs $(TARGET)
+
+dirs:
+	@if not exist $(OBJ_DIR) mkdir $(OBJ_DIR)
+	@if not exist $(BIN_DIR) mkdir $(BIN_DIR)
+
+$(TARGET): $(OBJECTS)
+	$(LINK) $(LDFLAGS) /OUT:$(TARGET) $(OBJECTS)
+
+$(OBJ_DIR)\main.obj: $(SRC_DIR)\main.cpp
+	$(CC) $(CFLAGS) /c $(SRC_DIR)\main.cpp /Fo$(OBJ_DIR)\main.obj
+
+$(OBJ_DIR)\opc_server.obj: $(SRC_DIR)\server\opc_server.cpp
+	$(CC) $(CFLAGS) /c $(SRC_DIR)\server\opc_server.cpp /Fo$(OBJ_DIR)\opc_server.obj
+
+$(OBJ_DIR)\gabbiani_device.obj: $(SRC_DIR)\device\gabbiani_device.cpp
+	$(CC) $(CFLAGS) /c $(SRC_DIR)\device\gabbiani_device.cpp /Fo$(OBJ_DIR)\gabbiani_device.obj
+
+$(OBJ_DIR)\opc_service.obj: $(SRC_DIR)\service\opc_service.cpp
+	$(CC) $(CFLAGS) /c $(SRC_DIR)\service\opc_service.cpp /Fo$(OBJ_DIR)\opc_service.obj
+
+clean:
+	@if exist $(OBJ_DIR) rmdir /s /q $(OBJ_DIR)
+	@if exist $(BIN_DIR) rmdir /s /q $(BIN_DIR)
+
+rebuild: clean all
+
+.PHONY: all dirs clean rebuild
